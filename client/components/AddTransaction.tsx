@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { ArrowLeft, Plus, Check, Search, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { AddCategoryModal } from "./AddCategoryModal"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import * as Icons from "lucide-react"
 
 interface Category {
@@ -213,6 +213,9 @@ export function AddTransaction({ onBack, onSuccess, initialType = "expense" }: A
       {/* AirPod-style Amount Popup */}
       <Dialog open={isAmountPopupOpen} onOpenChange={setIsAmountPopupOpen}>
         <DialogContent className="fixed bottom-0 top-auto left-1/2 -translate-x-1/2 translate-y-0 sm:bottom-6 rounded-t-[48px] rounded-b-none sm:rounded-[48px] max-w-[420px] w-full p-8 border-none shadow-2xl animate-in slide-in-from-bottom-full duration-700 focus:outline-none bg-white dark:bg-slate-900">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Add {initialType === "income" ? "Income" : "Expense"}</DialogTitle>
+          </DialogHeader>
           <form
             onSubmit={(e) => {
               e.preventDefault()

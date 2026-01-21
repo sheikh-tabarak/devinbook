@@ -5,7 +5,7 @@
 DevinBook is a premium, mobile-first expense tracking application designed to help you master your finances with style. Built with modern web technologies, it offers a seamless, app-like experience on any device.
 
 
-![DevinBook Login Showcase](docs/screenshots/login_showcase.png)
+![DevinBook Login Showcase](docs/screenshots/hero-mockup.png)
 
 ## Features
 

@@ -2,6 +2,15 @@
 
 All notable changes to the **DevinBook** project will be documented in this file.
 
+## [1.3.0] - 2026-01-21
+### Added
+- **Landing Page Overhaul**: Entirely new premium, high-density landing page focused on daily expense management.
+- **Brand Identity Shift**: Transitioned branding to a vibrant "Electric Purple to Pink" gradient theme.
+- **Mobile Guard**: Implemented `DesktopGuard` to enforce mobile-only access for the internal dashboard application while keeping the landing page accessible on PC.
+- **SEO & Discoverability**: Added comprehensive SEO metadata, `robots.txt`, and `sitemap.xml`.
+- **UX Enhancements**: Enabled smooth scrolling globally and added interactive section anchors.
+- **Productivity Features**: Integrated "Live Ledger" and "Daily Burn" widgets into the hero showcase.
+
 ## [1.2.6] - 2026-01-20
 ### Added
 - **Rebranding**: Officially renamed application to **DevinBook**.

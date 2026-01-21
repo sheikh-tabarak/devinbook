@@ -1,30 +1,70 @@
 import type { Metadata, Viewport } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
+import { Outfit } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/contexts/AuthContext"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
-import { BottomNavigation } from "@/components/BottomNavigation"
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+})
 
 export const metadata: Metadata = {
-  title: "DevinBook by Devinsol",
-  description: "Next-generation financial management app.",
+  title: "DevinBook | Daily Spending Mastered & Burn Rate Engine",
+  description: "DevinBook is a high-performance personal finance PWA by Devinsol. Track daily expenditures, monitor real-time burn rates, and command your wealth with military-grade precision.",
+  keywords: [
+    "Daily Expense Tracker",
+    "Personal Finance App",
+    "Fintech",
+    "Burn Rate Analysis",
+    "Expenditure Management",
+    "DevinBook",
+    "Devinsol",
+    "Digital Ledger",
+    "Wealth Management",
+    "Professional Budgeting",
+    "Expense Logging PWA"
+  ],
+  authors: [{ name: "Devinsol Group Architecture", url: "https://devinsol.com" }],
+  publisher: "Devinsol",
+  robots: "index, follow",
+  openGraph: {
+    type: "website",
+    url: "https://devinbook.devinsol.com",
+    title: "DevinBook | Daily Spending Mastered",
+    description: "Absorb absolute clarity over every Rupee. Log, map, and command your daily budget instantly.",
+    siteName: "DevinBook",
+    images: [{
+      url: "/logo.svg",
+      width: 1200,
+      height: 630,
+      alt: "DevinBook - Professional Financial Engine",
+    }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DevinBook | Daily Spending Mastered",
+    description: "Track daily expenditures and monitor real-time burn rates with precision.",
+    images: ["/logo.svg"],
+  },
   manifest: "/manifest.json",
   icons: {
     icon: "/logo.svg",
     apple: "/logo.svg",
+    shortcut: "/logo.svg",
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "DevinBook",
   },
-  generator: "v0.app",
 }
 
 export const viewport: Viewport = {
-  themeColor: "#000000",
+  themeColor: "#8B5CF6",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -37,23 +77,20 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={outfit.variable} suppressHydrationWarning>
       <head>
         <style>{`
 html {
-  font-family: ${GeistSans.style.fontFamily};
-  --font-sans: ${GeistSans.variable};
+  font-family: var(--font-outfit), ${GeistSans.style.fontFamily};
+  --font-sans: var(--font-outfit), ${GeistSans.variable};
   --font-mono: ${GeistMono.variable};
 }
         `}</style>
       </head>
-      <body className="bg-muted/30 dark:bg-muted/10" suppressHydrationWarning>
+      <body className="antialiased" suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AuthProvider>
-            <main className="mx-auto min-h-screen max-w-[450px] bg-background shadow-2xl relative overflow-x-hidden border-x border-border/50 pb-20">
-              {children}
-              <BottomNavigation />
-            </main>
+            {children}
             <Toaster />
           </AuthProvider>
         </ThemeProvider>

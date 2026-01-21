@@ -1,13 +1,13 @@
 {
     "name": "DevinBook",
     "short_name": "DevinBook",
-    "description": "Next-generation financial management app.",
+    "description": "Professional daily expense ledger and burn rate engine.",
     "start_url": "/",
     "id": "/",
     "display": "standalone",
     "orientation": "portrait",
-    "background_color": "#09090b",
-    "theme_color": "#09090b",
+    "background_color": "#ffffff",
+    "theme_color": "#8B5CF6",
     "categories": [
         "finance",
         "productivity",
