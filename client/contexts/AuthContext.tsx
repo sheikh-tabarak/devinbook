@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
+import { api } from "../lib/api"
 
 interface User {
   id: string
@@ -55,19 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed")
-      }
+      const data = await api.login(email, password)
 
       if (data.token && data.user) {
         localStorage.setItem("token", data.token)
@@ -85,19 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = async (name: string, email: string, password: string) => {
     try {
-      const response = await fetch("http://localhost:5000/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name, email, password }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || "Registration failed")
-      }
+      const data = await api.register(name, email, password)
 
       if (data.token && data.user) {
         localStorage.setItem("token", data.token)
@@ -115,16 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const forgotPassword = async (email: string) => {
     try {
-      const response = await fetch("http://localhost:5000/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || "Failed to send reset email")
-      }
+      await api.forgotPassword(email)
     } catch (error) {
       console.error("Forgot Password Error:", error)
       throw error
@@ -133,16 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resetPassword = async (token: string, password: string) => {
     try {
-      const response = await fetch("http://localhost:5000/api/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || "Failed to reset password")
-      }
+      await api.resetPassword(token, password)
     } catch (error) {
       console.error("Reset Password Error:", error)
       throw error
