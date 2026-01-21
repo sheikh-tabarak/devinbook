@@ -1,5 +1,5 @@
 class ApiClient {
-  private baseURL = "http://192.168.1.21:5000/api"
+  private baseURL = process.env.NEXT_PUBLIC_API_URL || "https://api-devinbook.vercel.app/api"
 
   private getAuthHeaders() {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
