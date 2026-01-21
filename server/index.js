@@ -15,7 +15,7 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const app = express();
 app.use(cors({
-    origin: ["http://localhost:3000", "http://192.168.1.21:3000"],
+    origin: ["http://localhost:3000", "http://192.168.1.21:3000", 'https://devinbook.devinsol.com'],
     credentials: true
 }));
 app.use(express.json());
