@@ -71,7 +71,8 @@ exports.forgotPassword = async (req, res) => {
       },
     });
 
-    const resetUrl = `http://localhost:3000/reset-password/${token}`;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const resetUrl = `${appUrl}/reset-password/${token}`;
 
     const mailOptions = {
       from: `"DevinBook" <${process.env.EMAIL_USERNAME || "no-reply@devinsol.com"}>`,

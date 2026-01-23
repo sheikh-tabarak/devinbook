@@ -15,11 +15,19 @@ interface Transaction {
   id: string
   amount: number
   type: "income" | "expense"
-  categoryId: string
+  categoryId: any
+  accountId?: any
   itemId?: string
   description?: string
   date: string
   createdAt: string
+}
+
+interface Account {
+  id: string
+  name: string
+  type: string
+  isDefault: boolean
 }
 
 interface Category {
@@ -39,12 +47,12 @@ interface EditTransactionModalProps {
 export function EditTransactionModal({ transaction, isOpen, onClose, onSuccess }: EditTransactionModalProps) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
-  const [categories, setCategories] = useState<Category[]>([])
-
-  // Form state
   const [amount, setAmount] = useState("")
   const [type, setType] = useState<"income" | "expense">("expense")
+  const [categories, setCategories] = useState<Category[]>([])
+  const [accounts, setAccounts] = useState<Account[]>([])
   const [selectedCategoryId, setSelectedCategoryId] = useState("")
+  const [selectedAccountId, setSelectedAccountId] = useState("")
   const [description, setDescription] = useState("")
   const [date, setDate] = useState("")
 
@@ -58,7 +66,10 @@ export function EditTransactionModal({ transaction, isOpen, onClose, onSuccess }
     if (transaction) {
       setAmount(transaction.amount.toString())
       setType(transaction.type)
-      setSelectedCategoryId(transaction.categoryId)
+      const catId = transaction.categoryId?._id || transaction.categoryId?.id || transaction.categoryId
+      setSelectedCategoryId(catId ? String(catId) : "")
+      const accId = transaction.accountId?._id || transaction.accountId?.id || transaction.accountId
+      setSelectedAccountId(accId ? String(accId) : "")
       setDescription(transaction.description || "")
       setDate(transaction.date.split("T")[0])
     }
@@ -66,8 +77,12 @@ export function EditTransactionModal({ transaction, isOpen, onClose, onSuccess }
 
   const loadData = async () => {
     try {
-      const categoriesData = await api.getCategories()
+      const [categoriesData, accountsData] = await Promise.all([
+        api.getCategories(),
+        api.getAccounts()
+      ])
       setCategories(categoriesData)
+      setAccounts(accountsData)
     } catch (error) {
       toast({
         title: "Error",
@@ -97,6 +112,7 @@ export function EditTransactionModal({ transaction, isOpen, onClose, onSuccess }
         amount: Number.parseFloat(amount),
         type,
         categoryId: selectedCategoryId,
+        accountId: selectedAccountId || undefined,
         itemId: transaction.itemId || undefined,
         description: description.trim() || undefined,
         date,
@@ -151,7 +167,7 @@ export function EditTransactionModal({ transaction, isOpen, onClose, onSuccess }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md rounded-[32px] p-8 border-none shadow-2xl overflow-y-auto max-h-[90vh]">
+      <DialogContent className="fixed top-1/2 left-0 right-0 mx-auto -translate-y-1/2 translate-x-0 max-w-[420px] w-[calc(100%-2rem)] rounded-[32px] p-8 border-none shadow-2xl overflow-y-auto max-h-[90vh] focus:outline-none">
         <DialogHeader>
           <DialogTitle className="text-2xl font-black text-center">Edit Entry</DialogTitle>
         </DialogHeader>
@@ -170,7 +186,7 @@ export function EditTransactionModal({ transaction, isOpen, onClose, onSuccess }
                 className="h-16 pr-10 rounded-2xl bg-muted/50 border-none text-2xl font-black text-right"
                 required
               />
-              <span className="ml-2 text-2xl font-black text-muted-foreground/30">₹</span>
+              <span className="ml-2 text-2xl font-black text-muted-foreground/30">Rs</span>
             </div>
           </div>
 
@@ -208,6 +224,23 @@ export function EditTransactionModal({ transaction, isOpen, onClose, onSuccess }
                 {categories.filter(c => c.type === type).map((category) => (
                   <SelectItem key={category.id} value={category.id} className="rounded-xl font-bold">
                     {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Account */}
+          <div className="space-y-2">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Paid From / To</Label>
+            <Select value={selectedAccountId} onValueChange={setSelectedAccountId} required>
+              <SelectTrigger className="h-14 rounded-2xl bg-muted/50 border-none font-bold">
+                <SelectValue placeholder="Select an account" />
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl border-none shadow-2xl">
+                {accounts.map((account) => (
+                  <SelectItem key={account.id} value={account.id} className="rounded-xl font-bold">
+                    {account.name}
                   </SelectItem>
                 ))}
               </SelectContent>

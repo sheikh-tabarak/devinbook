@@ -16,13 +16,16 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { AddTransaction } from "@/components/AddTransaction"
+import { EditTransactionModal } from "@/components/EditTransactionModal"
+import { SwipeableTransactionItem } from "@/components/SwipeableTransactionItem"
 import * as Icons from "lucide-react"
 
 interface Transaction {
     id: string
     amount: number
     type: "income" | "expense"
-    categoryId: any // Can be object after populate
+    categoryId: any
+    accountId?: any
     description?: string
     date: string
     createdAt: string
@@ -36,7 +39,10 @@ export default function TransactionsPage() {
     const [isAdding, setIsAdding] = useState(false)
     const [addType, setAddType] = useState<"income" | "expense">("expense")
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false)
     const [totalBalance, setTotalBalance] = useState(0)
+    const [accounts, setAccounts] = useState<any[]>([])
+    const [selectedAccountId, setSelectedAccountId] = useState<string>("all")
 
     useEffect(() => {
         loadTransactions()
@@ -45,14 +51,19 @@ export default function TransactionsPage() {
     const loadTransactions = async () => {
         try {
             setLoading(true)
-            const [data, stats] = await Promise.all([
-                api.getTransactions(),
-                api.getDashboardStats()
+            const [data, accountsResponse] = await Promise.all([
+                api.getTransactions(selectedAccountId === "all" ? undefined : selectedAccountId),
+                api.getAccounts()
             ])
 
             setTransactions(data)
-            if (stats?.monthly) {
-                setTotalBalance(stats.monthly.balance)
+            setAccounts(accountsResponse)
+
+            if (selectedAccountId === "all") {
+                setTotalBalance(accountsResponse.reduce((sum: number, acc: any) => sum + acc.balance, 0))
+            } else {
+                const selected = accountsResponse.find((a: any) => a.id === selectedAccountId)
+                setTotalBalance(selected ? selected.balance : 0)
             }
         } catch (error) {
             toast({
@@ -60,6 +71,36 @@ export default function TransactionsPage() {
                 description: "Failed to load transactions",
                 variant: "destructive",
             })
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        loadTransactions()
+    }, [selectedAccountId])
+
+    const handleTransactionClick = (transaction: Transaction) => {
+        const catId = transaction.categoryId?._id || transaction.categoryId?.id || transaction.categoryId
+        const accId = transaction.accountId?._id || transaction.accountId?.id || transaction.accountId
+        setEditingTransaction({
+            ...transaction,
+            id: transaction.id || (transaction as any)._id,
+            categoryId: catId ? String(catId) : "",
+            accountId: accId ? String(accId) : ""
+        })
+        setIsEditModalOpen(true)
+    }
+
+    const handleDeleteTransaction = async (transaction: Transaction) => {
+        if (!confirm("Are you sure you want to delete this transaction?")) return
+        try {
+            setLoading(true)
+            await api.deleteTransaction(transaction.id || (transaction as any)._id)
+            toast({ title: "Success", description: "Deleted successfully" })
+            loadTransactions()
+        } catch (error: any) {
+            toast({ title: "Error", description: error.message, variant: "destructive" })
         } finally {
             setLoading(false)
         }
@@ -107,17 +148,29 @@ export default function TransactionsPage() {
                 {/* Account Balance Header */}
                 <div className="p-6 pt-8 space-y-6">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                <Wallet className="h-5 w-5 text-primary" />
-                            </div>
-                            <span className="font-bold text-sm tracking-tight">Main Wallet</span>
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-6 px-6">
+                            <button
+                                onClick={() => setSelectedAccountId("all")}
+                                className={`flex-shrink-0 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedAccountId === "all" ? "bg-primary text-white shadow-lg" : "bg-muted text-muted-foreground"}`}
+                            >
+                                All Accounts
+                            </button>
+                            {accounts.map(acc => (
+                                <button
+                                    key={acc.id}
+                                    onClick={() => setSelectedAccountId(acc.id)}
+                                    className={`flex-shrink-0 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedAccountId === acc.id ? "bg-primary text-white shadow-lg" : "bg-muted text-muted-foreground"}`}
+                                >
+                                    {acc.name}
+                                </button>
+                            ))}
                         </div>
-                        <div className="bg-muted px-2 py-1 rounded-lg text-[10px] font-black uppercase">PKR</div>
                     </div>
 
                     <div className="space-y-1">
-                        <p className="text-muted-foreground text-sm font-medium">Account Balance</p>
+                        <p className="text-muted-foreground text-sm font-medium">
+                            {selectedAccountId === "all" ? "Total Balance" : "Account Balance"}
+                        </p>
                         <h1 className="text-4xl font-black tracking-tight">{(totalBalance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} Rs</h1>
                     </div>
 
@@ -141,7 +194,7 @@ export default function TransactionsPage() {
                     </div>
                 </div>
 
-                <div className="flex-1 bg-white dark:bg-slate-950 rounded-t-[40px] shadow-2xl border-t p-6 pb-20 space-y-8 min-h-[500px]">
+                <div className="flex-1 bg-slate-50/50 dark:bg-slate-950 rounded-t-[40px] shadow-2xl border-t p-6 pb-20 space-y-8 min-h-[500px]">
                     {loading ? (
                         <div className="flex items-center justify-center py-20">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -157,33 +210,49 @@ export default function TransactionsPage() {
                                 <h3 className="text-muted-foreground font-bold text-sm tracking-tight">{date}</h3>
                                 <div className="space-y-4">
                                     {items.map((tx) => (
-                                        <div
+                                        <SwipeableTransactionItem
                                             key={tx.id}
-                                            className="flex items-center justify-between group"
+                                            onEdit={() => handleTransactionClick(tx)}
+                                            onDelete={() => handleDeleteTransaction(tx)}
+                                            onClick={() => handleTransactionClick(tx)}
                                         >
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                                                    {renderCategoryIcon(tx.categoryId)}
-                                                </div>
-                                                <div>
-                                                    <p className="font-black text-sm">{tx.description || tx.categoryId?.name || "Untitled"}</p>
-                                                    <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-                                                        {tx.type === 'expense' ? 'Spending' : 'Income'} • {tx.categoryId?.name || 'General'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <div className="text-right">
-                                                    <p className={`font-black ${tx.type === 'income' ? 'text-green-500' : 'text-slate-900 dark:text-white'}`}>
-                                                        {tx.type === 'income' ? '+' : '-'}{(tx.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} Rs
-                                                    </p>
-                                                    <div className={`ml-auto w-4 h-4 rounded-full flex items-center justify-center ${tx.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'}`}>
-                                                        {tx.type === 'income' ? <ArrowDownLeft className="h-2 w-2" /> : <ArrowUpRight className="h-2 w-2" />}
+                                            <div
+                                                className="flex items-center justify-between group cursor-pointer p-4"
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                                                        {renderCategoryIcon(tx.categoryId)}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-black text-sm">{tx.description || tx.categoryId?.name || "Untitled"}</p>
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                                                                {tx.type === 'expense' ? 'Spending' : 'Income'} • {tx.categoryId?.name || 'General'}
+                                                            </p>
+                                                            {(tx as any).accountId && (tx as any).accountId.name !== "Main Wallet" && (
+                                                                <>
+                                                                    <div className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                                                                    <p className="text-[10px] uppercase font-black text-primary/60 tracking-tighter">
+                                                                        {(tx as any).accountId.name}
+                                                                    </p>
+                                                                </>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <ChevronRight className="h-4 w-4 text-muted-foreground/10" />
+                                                <div className="flex items-center gap-3">
+                                                    <div className="text-right">
+                                                        <p className={`font-black ${tx.type === 'income' ? 'text-green-500' : 'text-slate-900 dark:text-white'}`}>
+                                                            {tx.type === 'income' ? '+' : '-'}{(tx.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} Rs
+                                                        </p>
+                                                        <div className={`ml-auto w-4 h-4 rounded-full flex items-center justify-center ${tx.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'}`}>
+                                                            {tx.type === 'income' ? <ArrowDownLeft className="h-2 w-2" /> : <ArrowUpRight className="h-2 w-2" />}
+                                                        </div>
+                                                    </div>
+                                                    <ChevronRight className="h-4 w-4 text-muted-foreground/10" />
+                                                </div>
                                             </div>
-                                        </div>
+                                        </SwipeableTransactionItem>
                                     ))}
                                 </div>
                             </div>
@@ -192,6 +261,16 @@ export default function TransactionsPage() {
                 </div>
 
             </div>
+
+            <EditTransactionModal
+                isOpen={isEditModalOpen}
+                onClose={() => {
+                    setIsEditModalOpen(false)
+                    setEditingTransaction(null)
+                }}
+                transaction={editingTransaction}
+                onSuccess={loadTransactions}
+            />
         </ProtectedRoute>
     )
 }

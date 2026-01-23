@@ -9,9 +9,11 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { Mail, Lock, User, ArrowRight, Loader2, Sparkles, Eye, EyeOff } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 
 export function AuthForm() {
+  const router = useRouter()
   const [isLogin, setIsLogin] = useState(true)
   const [isForgot, setIsForgot] = useState(false)
   const [name, setName] = useState("")
@@ -42,12 +44,14 @@ export function AuthForm() {
           title: "Welcome back!",
           description: "Accessing your financial dashboard...",
         })
+        router.push("/dashboard")
       } else {
         await register(name, email, password)
         toast({
           title: "Account created!",
           description: "Your journey to financial freedom starts now.",
         })
+        router.push("/dashboard")
       }
     } catch (error) {
       toast({

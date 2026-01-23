@@ -4,10 +4,11 @@ import { useState, useEffect } from "react"
 import { api } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, Plus, Check, Search, X } from "lucide-react"
+import { ArrowLeft, Plus, Check, Search, X, Wallet } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { AddCategoryModal } from "./AddCategoryModal"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import * as Icons from "lucide-react"
 
 interface Category {
@@ -15,6 +16,13 @@ interface Category {
   name: string
   type: "income" | "expense"
   icon?: string
+}
+
+interface Account {
+  id: string
+  name: string
+  type: string
+  isDefault: boolean
 }
 
 interface AddTransactionProps {
@@ -40,6 +48,8 @@ export function AddTransaction({ onBack, onSuccess, initialType = "expense" }: A
   // Form state
   const [amount, setAmount] = useState("")
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
+  const [accounts, setAccounts] = useState<Account[]>([])
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null)
   const [description, setDescription] = useState("")
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -60,12 +70,23 @@ export function AddTransaction({ onBack, onSuccess, initialType = "expense" }: A
 
   const loadData = async () => {
     try {
-      const data = await api.getCategories()
-      setCategories(data)
+      const [categoriesData, accountsData] = await Promise.all([
+        api.getCategories(),
+        api.getAccounts()
+      ])
+      setCategories(categoriesData)
+      setAccounts(accountsData)
+
+      const defaultAcc = accountsData.find((a: Account) => a.isDefault)
+      if (defaultAcc) {
+        setSelectedAccountId(defaultAcc.id)
+      } else if (accountsData.length > 0) {
+        setSelectedAccountId(accountsData[0].id)
+      }
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to load categories",
+        description: "Failed to load data",
         variant: "destructive",
       })
     }
@@ -110,6 +131,7 @@ export function AddTransaction({ onBack, onSuccess, initialType = "expense" }: A
         amount: Number.parseFloat(amount),
         type: initialType,
         categoryId: selectedCategoryId,
+        accountId: selectedAccountId || undefined,
         description: description.trim() || undefined,
         date: new Date().toISOString().split("T")[0],
       })
@@ -210,18 +232,20 @@ export function AddTransaction({ onBack, onSuccess, initialType = "expense" }: A
         </div>
       </div>
 
-      {/* AirPod-style Amount Popup */}
-      <Dialog open={isAmountPopupOpen} onOpenChange={setIsAmountPopupOpen}>
-        <DialogContent className="fixed bottom-0 top-auto left-1/2 -translate-x-1/2 translate-y-0 sm:bottom-6 rounded-t-[48px] rounded-b-none sm:rounded-[48px] max-w-[420px] w-full p-8 border-none shadow-2xl animate-in slide-in-from-bottom-full duration-700 focus:outline-none bg-white dark:bg-slate-900">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Add {initialType === "income" ? "Income" : "Expense"}</DialogTitle>
-          </DialogHeader>
+      {/* Simple Native-style Bottom Drawer */}
+      <Drawer open={isAmountPopupOpen} onOpenChange={setIsAmountPopupOpen}>
+        <DrawerContent className="max-w-[450px] mx-auto rounded-t-[40px] border-none shadow-2xl bg-white dark:bg-slate-900 border-t">
+          <div className="mx-auto w-12 h-1.5 bg-muted/30 rounded-full mt-4 mb-4" />
+          <DrawerHeader className="sr-only">
+            <DrawerTitle>Add {initialType === "income" ? "Income" : "Expense"}</DrawerTitle>
+            <DrawerDescription>Enter the amount and a note for this transaction</DrawerDescription>
+          </DrawerHeader>
           <form
             onSubmit={(e) => {
               e.preventDefault()
               handleSubmit()
             }}
-            className="space-y-8"
+            className="p-8 pb-12 space-y-10"
           >
             <div className="flex flex-col items-center gap-3">
               <div className={`w-20 h-20 rounded-[32px] ${activeColor} text-white flex items-center justify-center shadow-2xl ${activeShadow} scale-110`}>
@@ -247,6 +271,28 @@ export function AddTransaction({ onBack, onSuccess, initialType = "expense" }: A
               <span className={`text-4xl font-black ${activeText} mt-2 ml-2 opacity-30`}>Rs</span>
             </div>
 
+            {/* Account Selection */}
+            <div className="space-y-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground text-center">Select Account</p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {accounts.map((acc) => (
+                  <button
+                    key={acc.id}
+                    type="button"
+                    onClick={() => setSelectedAccountId(acc.id)}
+                    className={cn(
+                      "px-4 py-2.5 rounded-xl text-xs font-black transition-all border-2",
+                      selectedAccountId === acc.id
+                        ? `${activeBorder} ${activeBgLight} ${activeText}`
+                        : "bg-muted/50 border-transparent text-muted-foreground"
+                    )}
+                  >
+                    {acc.name.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Note Field in Popup */}
             <div className="space-y-3">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground text-center">Note (Optional)</p>
@@ -254,7 +300,7 @@ export function AddTransaction({ onBack, onSuccess, initialType = "expense" }: A
                 placeholder="What was this for?"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="h-14 rounded-2xl bg-muted/50 border-none px-6 font-bold placeholder:font-medium text-center focus-visible:ring-primary/20"
+                className="h-16 rounded-2xl bg-muted/50 border-none px-6 font-bold placeholder:font-medium text-center focus-visible:ring-primary/20"
               />
             </div>
 
@@ -266,8 +312,8 @@ export function AddTransaction({ onBack, onSuccess, initialType = "expense" }: A
               {loading ? "Processing..." : `Add ${initialType === 'income' ? 'Income' : 'Spending'}`}
             </Button>
           </form>
-        </DialogContent>
-      </Dialog>
+        </DrawerContent>
+      </Drawer>
 
       <AddCategoryModal
         isOpen={isAddCategoryOpen}

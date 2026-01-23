@@ -16,12 +16,14 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useTheme } from "next-themes"
+import { useRouter } from "next/navigation"
 import packageInfo from "../package.json"
 
 export function Settings() {
   const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
   const { toast } = useToast()
+  const router = useRouter()
 
   const handleLogout = () => {
     logout()
@@ -29,6 +31,7 @@ export function Settings() {
       title: "Logged out",
       description: "You have been logged out successfully",
     })
+    router.push("/login")
   }
 
   const menuItems = [

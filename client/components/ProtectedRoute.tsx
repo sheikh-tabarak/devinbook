@@ -1,9 +1,9 @@
 "use client"
 
 import type React from "react"
-
 import { useAuth } from "@/contexts/AuthContext"
-import { AuthForm } from "./AuthForm"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -11,6 +11,13 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login")
+    }
+  }, [user, loading, router])
 
   if (loading) {
     return (
@@ -21,7 +28,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!user) {
-    return <AuthForm />
+    return null // Will redirect via useEffect
   }
 
   return <>{children}</>

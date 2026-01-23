@@ -1,8 +1,38 @@
 const Transaction = require("../models/Transaction");
+const Account = require("../models/Account");
 
 exports.createTransaction = async (req, res) => {
   try {
-    const transaction = await Transaction.create({ ...req.body, userId: req.user._id });
+    let { accountId } = req.body;
+
+    // If no accountId provided, use the default account
+    if (!accountId) {
+      const defaultAccount = await Account.findOne({ userId: req.user._id, isDefault: true });
+      if (defaultAccount) {
+        accountId = defaultAccount._id;
+      } else {
+        // Fallback: use any account if no default exists
+        const anyAccount = await Account.findOne({ userId: req.user._id });
+        if (anyAccount) {
+          accountId = anyAccount._id;
+        } else {
+          // If no accounts exist at all, create 'Main Wallet'
+          const mainWallet = await Account.create({
+            userId: req.user._id,
+            name: "Main Wallet",
+            type: "cash",
+            isDefault: true
+          });
+          accountId = mainWallet._id;
+        }
+      }
+    }
+
+    const transaction = await Transaction.create({
+      ...req.body,
+      accountId,
+      userId: req.user._id
+    });
     res.status(201).json(transaction);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -11,9 +41,14 @@ exports.createTransaction = async (req, res) => {
 
 exports.getTransactions = async (req, res) => {
   try {
-    const transactions = await Transaction.find({ userId: req.user._id })
+    const { accountId } = req.query;
+    const query = { userId: req.user._id };
+    if (accountId) query.accountId = accountId;
+
+    const transactions = await Transaction.find(query)
       .populate("categoryId")
-      .populate("itemId");
+      .populate("itemId")
+      .populate("accountId");
 
     const formattedTransactions = transactions.map(t => {
       const trans = t.toObject();
@@ -21,6 +56,9 @@ exports.getTransactions = async (req, res) => {
 
       if (trans.categoryId) {
         trans.categoryId.id = trans.categoryId._id;
+      }
+      if (trans.accountId) {
+        trans.accountId.id = trans.accountId._id;
       }
       if (trans.itemId && trans.itemId._id) {
         trans.itemId.id = trans.itemId._id;

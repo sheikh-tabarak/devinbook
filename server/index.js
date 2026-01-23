@@ -12,6 +12,7 @@ const categoryRoutes = require("./routes/categoryRoutes");
 const itemRoutes = require("./routes/itemRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const accountRoutes = require("./routes/accountRoutes");
 
 const app = express();
 app.use(cors({
@@ -29,6 +30,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/accounts", accountRoutes);
 
 
 const PORT = process.env.PORT || 5000;

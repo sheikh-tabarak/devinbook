@@ -125,14 +125,16 @@ class ApiClient {
   }
 
   // Transactions
-  async getTransactions() {
-    return this.request("/transactions")
+  async getTransactions(accountId?: string) {
+    const query = accountId ? `?accountId=${accountId}` : ""
+    return this.request(`/transactions${query}`)
   }
 
   async createTransaction(transaction: {
     amount: number
     type: "income" | "expense"
     categoryId: string
+    accountId?: string
     itemId?: string
     description?: string
     date: string
@@ -149,6 +151,7 @@ class ApiClient {
       amount: number
       type: "income" | "expense"
       categoryId: string
+      accountId?: string
       itemId?: string
       description?: string
       date: string
@@ -162,6 +165,31 @@ class ApiClient {
 
   async deleteTransaction(id: string) {
     return this.request(`/transactions/${id}`, {
+      method: "DELETE",
+    })
+  }
+
+  // Accounts
+  async getAccounts() {
+    return this.request("/accounts")
+  }
+
+  async createAccount(name: string, type: string, isDefault: boolean = false, isFeatured: boolean = false) {
+    return this.request("/accounts", {
+      method: "POST",
+      body: JSON.stringify({ name, type, isDefault, isFeatured }),
+    })
+  }
+
+  async updateAccount(id: string, data: { name?: string; type?: string; isDefault?: boolean; isFeatured?: boolean }) {
+    return this.request(`/accounts/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteAccount(id: string) {
+    return this.request(`/accounts/${id}`, {
       method: "DELETE",
     })
   }

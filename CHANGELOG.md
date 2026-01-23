@@ -2,6 +2,21 @@
 
 All notable changes to the **DevinBook** project will be documented in this file.
 
+## [1.3.1] - 2026-01-24
+### Added
+- **Featured Accounts**: Users can now mark specific accounts as "Featured" to highlight their balances directly on the Dashboard overview card.
+- **Dedicated Login Portal**: Implemented a standalone `/login` route with forced light-mode styling for a professional first-impression.
+- **Account Management**: Added a full Edit Account system with visual badges for featured status.
+
+### Changed
+- **PWA Optimization**: Updated launch logic to skip the landing page and open directly into the Dashboard for installed app users.
+- **Auth Redirection**: Implemented intelligent redirection logic that sends unauthenticated users to `/login` and authenticated users straight to the dashboard.
+- **Transaction UI**: Enhanced entry card visibility with improved rounding, deeper shadows (`shadow-md`), and better background contrast.
+
+### Fixed
+- **Transaction Persistence**: Fixed a critical bug where the "Paid From / To" account selection was not being preserved during transaction edits.
+- **ID Normalization**: Standardized ID handling between backend and frontend to ensure consistent account and category associations.
+
 ## [1.3.0] - 2026-01-21
 ### Added
 - **Landing Page Overhaul**: Entirely new premium, high-density landing page focused on daily expense management.

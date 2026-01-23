@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { api } from "@/lib/api"
+import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -21,6 +22,8 @@ import { CategoryPieChart } from "./CategoryPieChart"
 import { RecentTransactions } from "./RecentTransactions"
 import { InitialSetup } from "./InitialSetup"
 import { AddTransaction } from "./AddTransaction"
+import { EditTransactionModal } from "./EditTransactionModal"
+import { EditCategoryModal } from "./EditCategoryModal"
 import * as Icons from "lucide-react"
 import { DashboardSkeleton } from "./SkeletonLoader"
 import { useToast } from "@/hooks/use-toast"
@@ -69,7 +72,12 @@ export function Dashboard() {
   const [isAdding, setIsAdding] = useState(false)
   const [addType, setAddType] = useState<"income" | "expense">("expense")
   const [viewType, setViewType] = useState<"income" | "expense">("expense")
+  const [editingTransaction, setEditingTransaction] = useState<any | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [editingCategory, setEditingCategory] = useState<any | null>(null)
+  const [isEditCategoryModalOpen, setIsEditCategoryModalOpen] = useState(false)
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
+  const [accounts, setAccounts] = useState<any[]>([])
 
   useEffect(() => {
     loadDashboardData()
@@ -88,14 +96,16 @@ export function Dashboard() {
         return
       }
 
-      const [statsResponse, transactions] = await Promise.all([
+      const [statsResponse, transactions, accountsResponse] = await Promise.all([
         api.getDashboardStats(),
         api.getTransactions(),
+        api.getAccounts()
       ])
 
       setStats(statsResponse)
       setAllTransactions(transactions)
       setRecentTransactions(transactions.slice(0, 5))
+      setAccounts(accountsResponse)
       setNeedsSetup(false)
     } catch (error) {
       toast({
@@ -307,6 +317,32 @@ export function Dashboard() {
     return <IconComponent className="h-5 w-5" />
   }
 
+  const handleTransactionClick = (transaction: any) => {
+    const catId = transaction.categoryId?._id || transaction.categoryId?.id || transaction.categoryId
+    const accId = transaction.accountId?._id || transaction.accountId?.id || transaction.accountId
+    setEditingTransaction({
+      ...transaction,
+      id: transaction.id || transaction._id,
+      categoryId: catId ? String(catId) : "",
+      accountId: accId ? String(accId) : ""
+    })
+    setIsEditModalOpen(true)
+  }
+
+  const handleDeleteTransaction = async (transaction: any) => {
+    if (!confirm("Are you sure you want to delete this transaction?")) return
+    try {
+      setLoading(true)
+      await api.deleteTransaction(transaction.id || transaction._id)
+      toast({ title: "Success", description: "Deleted successfully" })
+      loadDashboardData()
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (loading) return <DashboardSkeleton />
   if (needsSetup) return <InitialSetup onComplete={loadDashboardData} />
 
@@ -359,17 +395,30 @@ export function Dashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 gap-4">
-          <Card className="rounded-[32px] border-none bg-slate-900 text-white shadow-2xl overflow-hidden relative">
+          <Card className="rounded-[40px] border-none bg-slate-900 text-white shadow-2xl overflow-hidden relative">
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <DollarSign className="w-24 h-24" />
             </div>
             <CardContent className="p-8 space-y-6">
               <div className="space-y-1">
-                <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">Total Balance</p>
+                <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">Total Balance</p>
                 <h2 className="text-5xl font-black tracking-tighter">
-                  {(currentStats?.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} Rs
+                  {(accounts.reduce((sum, acc) => sum + acc.balance, 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })} Rs
                 </h2>
               </div>
+
+              {/* Featured Accounts */}
+              {accounts.some(a => a.isFeatured) && (
+                <div className="flex flex-wrap gap-4 py-2 border-y border-white/5">
+                  {accounts.filter(a => a.isFeatured).map(acc => (
+                    <div key={acc.id} className="space-y-0.5">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{acc.name}</p>
+                      <p className="font-black text-sm">{(acc.balance || 0).toLocaleString()} Rs</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="flex items-center gap-6 pt-2">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
@@ -465,7 +514,26 @@ export function Dashboard() {
                         {renderIcon(cat.icon)}
                       </div>
                       <div>
-                        <p className="font-black text-sm uppercase tracking-wide">{cat.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-black text-sm uppercase tracking-wide">{cat.name}</p>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 rounded-full sm:opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingCategory({
+                                id: cat.id,
+                                name: cat.name,
+                                icon: cat.icon,
+                                type: viewType
+                              });
+                              setIsEditCategoryModalOpen(true);
+                            }}
+                          >
+                            <Icons.Settings2 className="h-3 w-3 text-muted-foreground" />
+                          </Button>
+                        </div>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                           {((cat.value / (viewType === 'expense' ? currentStats.expenses : currentStats.income)) * 100).toFixed(0)}% of total
                         </p>
@@ -475,11 +543,13 @@ export function Dashboard() {
                       <div className="text-right">
                         <p className="font-black text-lg">{cat.value.toLocaleString()} Rs</p>
                       </div>
-                      {expandedCategory === cat.id ? (
-                        <ChevronUp className="h-5 w-5 text-muted-foreground/30" />
-                      ) : (
-                        <ChevronDown className="h-5 w-5 text-muted-foreground/30 group-hover:text-primary transition-colors" />
-                      )}
+                      <div className="flex items-center">
+                        {expandedCategory === cat.id ? (
+                          <ChevronUp className="h-5 w-5 text-muted-foreground/30" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-muted-foreground/30 group-hover:text-primary transition-colors" />
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -487,7 +557,11 @@ export function Dashboard() {
                     <div className="px-5 pb-5 pt-0 space-y-3 border-t bg-muted/5">
                       <div className="pt-4 space-y-3">
                         {cat.transactions.map((tx: any) => (
-                          <div key={tx.id} className="flex items-center justify-between py-2 border-b border-dashed last:border-0 border-muted-foreground/10">
+                          <div
+                            key={tx.id}
+                            onClick={() => handleTransactionClick(tx)}
+                            className="flex items-center justify-between py-2 border-b border-dashed last:border-0 border-muted-foreground/10 cursor-pointer hover:bg-muted/50 -mx-2 px-2 rounded-xl active:scale-[0.98] transition-all"
+                          >
                             <div>
                               <p className="font-bold text-xs">{tx.description || "No description"}</p>
                               <p className="text-[10px] text-muted-foreground">
@@ -516,7 +590,11 @@ export function Dashboard() {
           </div>
 
           <div className="bg-white dark:bg-slate-900 rounded-[32px] shadow-sm border p-2">
-            <RecentTransactions transactions={recentTransactions} />
+            <RecentTransactions
+              transactions={recentTransactions}
+              onTransactionClick={handleTransactionClick}
+              onDeleteTransaction={handleDeleteTransaction}
+            />
           </div>
         </div>
 
@@ -532,6 +610,26 @@ export function Dashboard() {
 
         </div>
       </div>
+
+      <EditTransactionModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false)
+          setEditingTransaction(null)
+        }}
+        transaction={editingTransaction}
+        onSuccess={loadDashboardData}
+      />
+
+      <EditCategoryModal
+        isOpen={isEditCategoryModalOpen}
+        onClose={() => {
+          setIsEditCategoryModalOpen(false)
+          setEditingCategory(null)
+        }}
+        category={editingCategory}
+        onSuccess={loadDashboardData}
+      />
     </div>
   )
 }

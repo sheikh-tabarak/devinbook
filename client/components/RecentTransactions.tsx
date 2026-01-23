@@ -1,14 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowUpRight, ArrowDownLeft, ChevronRight } from "lucide-react"
+import { ArrowUpRight, ArrowDownLeft, ChevronRight, Edit2, Trash2 } from "lucide-react"
+import { SwipeableTransactionItem } from "./SwipeableTransactionItem"
 
 interface Transaction {
   id: string
   amount: number
   type: "income" | "expense"
-  categoryId: string
-  itemId: string
+  categoryId: any
+  accountId?: any
+  itemId: any
   description?: string
   date: string
   createdAt: string
@@ -17,9 +19,11 @@ interface Transaction {
 interface RecentTransactionsProps {
   transactions: Transaction[]
   onTransactionUpdate?: () => void
+  onTransactionClick?: (transaction: Transaction) => void
+  onDeleteTransaction?: (transaction: Transaction) => void
 }
 
-export function RecentTransactions({ transactions }: RecentTransactionsProps) {
+export function RecentTransactions({ transactions, onTransactionClick, onDeleteTransaction }: RecentTransactionsProps) {
 
   if (transactions.length === 0) {
     return (
@@ -31,13 +35,15 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
   }
 
   return (
-    <>
-      <div className="space-y-4 p-4">
-        {transactions.map((transaction) => (
-          <div
-            key={transaction.id}
-            className="flex items-center justify-between group transition-all"
-          >
+    <div className="space-y-4 p-2">
+      {transactions.map((transaction) => (
+        <SwipeableTransactionItem
+          key={transaction.id}
+          onEdit={() => onTransactionClick?.(transaction)}
+          onDelete={() => onDeleteTransaction?.(transaction)}
+          onClick={() => onTransactionClick?.(transaction)}
+        >
+          <div className="flex items-center justify-between p-4">
             <div className="flex items-center gap-4">
               <div
                 className={`w-12 h-12 rounded-2xl flex items-center justify-center ${transaction.type === "income"
@@ -52,10 +58,20 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                 )}
               </div>
               <div className="space-y-0.5">
-                <p className="font-black text-sm">{transaction.description || (transaction.categoryId as any)?.name || "Untitled Entry"}</p>
-                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">
-                  {new Date(transaction.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
-                </p>
+                <p className="font-black text-sm">{transaction.description || transaction.categoryId?.name || "Untitled Entry"}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest leading-none">
+                    {new Date(transaction.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                  </p>
+                  {transaction.accountId && transaction.accountId.name !== "Main Wallet" && (
+                    <>
+                      <div className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                      <p className="text-[10px] uppercase font-black text-primary/60 tracking-tighter leading-none">
+                        {transaction.accountId.name}
+                      </p>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -65,9 +81,8 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
               <ChevronRight className="h-4 w-4 text-muted-foreground/10" />
             </div>
           </div>
-        ))}
-      </div>
-
-    </>
+        </SwipeableTransactionItem>
+      ))}
+    </div>
   )
 }

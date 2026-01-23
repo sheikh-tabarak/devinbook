@@ -224,7 +224,7 @@ export default function LandingPage() {
             >
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 text-[9px] font-bold uppercase tracking-[0.15em] text-slate-400 shadow-sm font-sans mb-1">
                 <Sparkles className="w-2.5 h-2.5 text-indigo-500" />
-                DevinBook v1.3.0
+                DevinBook v1.3.1
               </div>
 
               <h1 className="text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-black tracking-[-0.04em] leading-[0.95] text-black font-sans">
