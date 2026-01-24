@@ -28,7 +28,7 @@ export default function ManagePage() {
                                     : "text-muted-foreground hover:text-foreground"
                             )}
                         >
-                            GROUPS
+                            CATEGORIES
                         </button>
                         <button
                             onClick={() => setActiveTab("accounts")}

@@ -22,7 +22,7 @@ const connectDB = async () => {
 
   if (!cached.promise) {
     const opts = {
-      bufferCommands: false, // Return error immediately if not connected
+      // bufferCommands is true by default, allowing Mongoose to wait for connection
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {

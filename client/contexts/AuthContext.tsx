@@ -29,29 +29,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check for stored token on mount
-    try {
+    // Register global unauthorized handler
+    api.setUnauthorizedHandler(() => {
+      logout()
+    })
+
+    const verifySession = async () => {
       const storedToken = localStorage.getItem("token")
       const storedUser = localStorage.getItem("user")
 
-      if (storedToken && storedUser &&
-        storedToken !== "undefined" &&
-        storedUser !== "undefined" &&
-        storedUser !== "[object Object]") {
-        setToken(storedToken)
-        setUser(JSON.parse(storedUser))
-      } else {
-        // Clean up corrupted storage
+      if (!storedToken || !storedUser ||
+        storedToken === "undefined" ||
+        storedUser === "undefined" ||
+        storedUser === "[object Object]") {
         localStorage.removeItem("token")
         localStorage.removeItem("user")
+        setLoading(false)
+        return
       }
-    } catch (error) {
-      console.error("Error restoration session:", error)
-      localStorage.removeItem("token")
-      localStorage.removeItem("user")
-    } finally {
-      setLoading(false)
+
+      try {
+        // First set what we have to avoid flicker if it's actually valid
+        setToken(storedToken)
+        setUser(JSON.parse(storedUser))
+
+        // Then verify with server
+        const userData = await api.getMe()
+        setUser(userData)
+        localStorage.setItem("user", JSON.stringify(userData))
+      } catch (error) {
+        console.error("Session verification failed:", error)
+        logout()
+      } finally {
+        setLoading(false)
+      }
     }
+
+    verifySession()
   }, [])
 
   const login = async (email: string, password: string) => {

@@ -21,8 +21,15 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Connect to MongoDB
-connectDB();
+// Connection middleware to ensure DB is ready before any request
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+        next();
+    } catch (error) {
+        res.status(500).json({ message: "Database connection failed" });
+    }
+});
 
 // Use Routes
 app.use("/api/auth", authRoutes);

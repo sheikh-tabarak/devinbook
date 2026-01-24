@@ -59,7 +59,7 @@ export function InitialSetup({ onComplete }: InitialSetupProps) {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to create category",
+        description: error.message || "Failed to create group",
         variant: "destructive",
       })
     } finally {
@@ -75,7 +75,7 @@ export function InitialSetup({ onComplete }: InitialSetupProps) {
 
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-black tracking-tighter">Welcome abroad!</h1>
-        <p className="text-muted-foreground text-sm font-medium">Let's set up your first category.</p>
+        <p className="text-muted-foreground text-sm font-medium">Let's set up your first group.</p>
       </div>
 
       <Card className="w-full max-w-sm rounded-[40px] border-none shadow-2xl overflow-hidden">
@@ -100,7 +100,7 @@ export function InitialSetup({ onComplete }: InitialSetupProps) {
 
             <div className="space-y-2">
               <Input
-                placeholder="Category Name (e.g. Rent)"
+                placeholder="Group Name (e.g. Rent)"
                 value={categoryName}
                 onChange={(e) => setCategoryName(e.target.value)}
                 required
@@ -118,8 +118,8 @@ export function InitialSetup({ onComplete }: InitialSetupProps) {
                     type="button"
                     onClick={() => setSelectedIcon(item.name)}
                     className={`aspect-square rounded-xl flex items-center justify-center transition-all ${selectedIcon === item.name
-                        ? "bg-primary text-primary-foreground shadow-lg scale-110"
-                        : "bg-white dark:bg-slate-900 text-muted-foreground hover:bg-white/80"
+                      ? "bg-primary text-primary-foreground shadow-lg scale-110"
+                      : "bg-white dark:bg-slate-900 text-muted-foreground hover:bg-white/80"
                       }`}
                   >
                     <item.icon className="h-4 w-4" />

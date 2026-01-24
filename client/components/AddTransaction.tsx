@@ -119,7 +119,7 @@ export function AddTransaction({ onBack, onSuccess, initialType = "expense" }: A
     if (!selectedCategoryId) {
       toast({
         title: "Error",
-        description: "Please select a category",
+        description: "Please select a group",
         variant: "destructive",
       })
       return
@@ -191,9 +191,9 @@ export function AddTransaction({ onBack, onSuccess, initialType = "expense" }: A
         {searchQuery && (
           <button
             onClick={() => setSearchQuery("")}
-            className="absolute right-4 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted"
+            className="absolute right-4 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted"
           >
-            <X className="h-3 w-3" />
+            <X className="h-4 w-4" />
           </button>
         )}
       </div>
@@ -225,7 +225,7 @@ export function AddTransaction({ onBack, onSuccess, initialType = "expense" }: A
             className="flex flex-col items-center gap-2 group"
           >
             <div className={`w-16 h-16 rounded-[24px] bg-muted/30 border-2 border-dashed border-muted-foreground/20 flex items-center justify-center text-muted-foreground hover:${activeBorder}/50 hover:${activeBgLight} transition-all`}>
-              <Plus className="h-6 w-6" />
+              <Plus className="h-8 w-8" />
             </div>
             <span className="text-[10px] font-black uppercase text-muted-foreground">Add New</span>
           </button>
@@ -234,84 +234,90 @@ export function AddTransaction({ onBack, onSuccess, initialType = "expense" }: A
 
       {/* Simple Native-style Bottom Drawer */}
       <Drawer open={isAmountPopupOpen} onOpenChange={setIsAmountPopupOpen}>
-        <DrawerContent className="max-w-[450px] mx-auto rounded-t-[40px] border-none shadow-2xl bg-white dark:bg-slate-900 border-t">
-          <div className="mx-auto w-12 h-1.5 bg-muted/30 rounded-full mt-4 mb-4" />
+        <DrawerContent className="max-w-[450px] mx-auto rounded-t-[40px] border-none shadow-2xl bg-white dark:bg-slate-900 border-t overflow-hidden max-h-[96vh]">
+          <div className="mx-auto w-12 h-1.5 bg-muted/30 rounded-full mt-4 mb-2 shrink-0" />
           <DrawerHeader className="sr-only">
             <DrawerTitle>Add {initialType === "income" ? "Income" : "Expense"}</DrawerTitle>
             <DrawerDescription>Enter the amount and a note for this transaction</DrawerDescription>
           </DrawerHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              handleSubmit()
-            }}
-            className="p-8 pb-12 space-y-10"
-          >
-            <div className="flex flex-col items-center gap-3">
-              <div className={`w-20 h-20 rounded-[32px] ${activeColor} text-white flex items-center justify-center shadow-2xl ${activeShadow} scale-110`}>
-                {renderIcon(pendingCategory?.icon)}
-              </div>
-              <p className={`text-sm font-black uppercase tracking-[0.2em] ${activeText}`}>
-                {pendingCategory?.name}
-              </p>
-            </div>
-
-            {/* Amount Input */}
-            <div className="relative flex items-center justify-center w-full px-4 h-32">
-              <input
-                type="number"
-                inputMode="decimal"
-                enterKeyHint="done"
-                placeholder="0"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className={`border-none bg-transparent text-right pr-2 text-[64px] sm:text-[90px] font-black h-full w-full max-w-[280px] focus:outline-none placeholder:text-muted-foreground/5 ${activeText} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none p-0 leading-none`}
-                autoFocus
-              />
-              <span className={`text-4xl font-black ${activeText} mt-2 ml-2 opacity-30`}>Rs</span>
-            </div>
-
-            {/* Account Selection */}
-            <div className="space-y-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground text-center">Select Account</p>
-              <div className="flex flex-wrap justify-center gap-2">
-                {accounts.map((acc) => (
-                  <button
-                    key={acc.id}
-                    type="button"
-                    onClick={() => setSelectedAccountId(acc.id)}
-                    className={cn(
-                      "px-4 py-2.5 rounded-xl text-xs font-black transition-all border-2",
-                      selectedAccountId === acc.id
-                        ? `${activeBorder} ${activeBgLight} ${activeText}`
-                        : "bg-muted/50 border-transparent text-muted-foreground"
-                    )}
-                  >
-                    {acc.name.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Note Field in Popup */}
-            <div className="space-y-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground text-center">Note (Optional)</p>
-              <Input
-                placeholder="What was this for?"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="h-16 rounded-2xl bg-muted/50 border-none px-6 font-bold placeholder:font-medium text-center focus-visible:ring-primary/20"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              disabled={loading || !amount}
-              className={`w-full h-20 rounded-[32px] text-xl font-black shadow-2xl transition-all active:scale-95 ${activeColor} text-white hover:opacity-90 ${activeShadow}`}
+          <div className="overflow-y-auto w-full px-6 pt-2 pb-10">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleSubmit()
+              }}
+              className="space-y-6"
             >
-              {loading ? "Processing..." : `Add ${initialType === 'income' ? 'Income' : 'Spending'}`}
-            </Button>
-          </form>
+              {/* Category Icon + Amount Row */}
+              <div className="flex items-center justify-between gap-4 mt-2 px-2">
+                <div className="flex flex-col items-center shrink-0">
+                  <div className={`w-14 h-14 rounded-[20px] ${activeColor} text-white flex items-center justify-center shadow-lg ${activeShadow}`}>
+                    {renderIcon(pendingCategory?.icon)}
+                  </div>
+                  <p className={`text-[9px] font-black uppercase tracking-[0.1em] mt-1.5 ${activeText}`}>
+                    {pendingCategory?.name}
+                  </p>
+                </div>
+
+                <div className="flex-1 relative flex items-center justify-end h-16">
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    enterKeyHint="done"
+                    placeholder="0"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className={`border-none bg-transparent text-right pr-2 text-5xl font-black h-full w-full focus:outline-none placeholder:text-muted-foreground/5 ${activeText} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none p-0 leading-none`}
+                    autoFocus
+                  />
+                  <span className={`text-xl font-black ${activeText} mt-1 ml-1 opacity-20`}>Rs</span>
+                </div>
+              </div>
+
+              {/* Account Selection */}
+              <div className="space-y-3 pt-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground text-center">Select Account</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {accounts.map((acc) => (
+                    <button
+                      key={acc.id}
+                      type="button"
+                      onClick={() => setSelectedAccountId(acc.id)}
+                      className={cn(
+                        "px-4 py-2 rounded-xl text-[10px] font-black transition-all border-2",
+                        selectedAccountId === acc.id
+                          ? `${activeBorder} ${activeBgLight} ${activeText}`
+                          : "bg-muted/50 border-transparent text-muted-foreground"
+                      )}
+                    >
+                      {acc.name.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Note Field in Popup */}
+              <div className="space-y-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground text-center">Note (Optional)</p>
+                <Input
+                  placeholder="What was this for?"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="h-14 rounded-2xl bg-muted/50 border-none px-6 font-bold placeholder:font-medium text-center focus-visible:ring-primary/20"
+                />
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  type="submit"
+                  disabled={loading || !amount}
+                  className={`w-full h-16 rounded-[24px] text-lg font-black shadow-2xl transition-all active:scale-95 ${activeColor} text-white hover:opacity-90 ${activeShadow}`}
+                >
+                  {loading ? "Processing..." : `Add ${initialType === 'income' ? 'Income' : 'Spending'}`}
+                </Button>
+              </div>
+            </form>
+          </div>
         </DrawerContent>
       </Drawer>
 

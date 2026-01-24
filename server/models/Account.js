@@ -6,6 +6,7 @@ const accountSchema = new mongoose.Schema({
     type: { type: String, enum: ["cash", "bank", "person", "other"], default: "cash" },
     isDefault: { type: Boolean, default: false },
     isFeatured: { type: Boolean, default: false },
+    lastReportSentAt: { type: Date, default: null },
 }, {
     timestamps: true,
     toJSON: {

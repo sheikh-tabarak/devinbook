@@ -2,6 +2,20 @@
 
 All notable changes to the **DevinBook** project will be documented in this file.
 
+## [1.3.2] - 2026-01-24
+### Added
+- **Default Protection & Migration**: Implemented a "fail-safe" system for Categories and Accounts. Default items ("Other Expenses", "Other Income", "Main Wallet") are now protected from deletion.
+- **Smart Transaction Migration**: When a category or account is deleted, all its associated transactions are now automatically moved to the default category/account, preventing data loss.
+- **Improved Transaction Drawer**: Re-engineered the "Add Transaction" drawer with a side-by-side layout for icon and amount, optimizing vertical space for easier access to the "Add" button on mobile.
+
+### Changed
+- **Terminology Standardization**: Streamlined navigation and management labels, ensuring "CATEGORIES" is used consistently across the Manage page and entry forms.
+- **UI Spacing**: Reduced excessive vertical padding in transaction forms to minimize scrolling on small screens.
+
+### Fixed
+- **Dark Mode Accessibility**: Resolved "white-on-white" contrast issues on the Transactions page and Share Report modal, ensuring active selection states are perfectly readable.
+- **Account Filter Logic**: Fixed a bug where multiple account filter pills would highlight incorrectly; now only the active selection is visualized.
+
 ## [1.3.1] - 2026-01-24
 ### Added
 - **Featured Accounts**: Users can now mark specific accounts as "Featured" to highlight their balances directly on the Dashboard overview card.
@@ -14,6 +28,7 @@ All notable changes to the **DevinBook** project will be documented in this file
 - **Transaction UI**: Enhanced entry card visibility with improved rounding, deeper shadows (`shadow-md`), and better background contrast.
 
 ### Fixed
+- **Database Connection Persistence**: Resolved a critical production error (`bufferCommands = false`) by enabling Mongoose command buffering and implementing a middleware to ensure database readiness before processing requests.
 - **Transaction Persistence**: Fixed a critical bug where the "Paid From / To" account selection was not being preserved during transaction edits.
 - **ID Normalization**: Standardized ID handling between backend and frontend to ensure consistent account and category associations.
 

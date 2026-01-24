@@ -91,35 +91,41 @@ exports.deleteAccount = async (req, res) => {
         const accountId = req.params.id;
         const userId = req.user._id;
 
-        // Check if account has transactions
-        const transactionCount = await Transaction.countDocuments({ accountId, userId });
-        if (transactionCount > 0) {
-            return res.status(400).json({
-                message: `Cannot delete account. It is used in ${transactionCount} transactions.`
-            });
-        }
-
-        // Don't allow deleting the last account
-        const accountCount = await Account.countDocuments({ userId });
-        if (accountCount <= 1) {
-            return res.status(400).json({
-                message: "Cannot delete the only account."
-            });
-        }
-
-        const account = await Account.findOneAndDelete({ _id: accountId, userId });
+        const account = await Account.findOne({ _id: accountId, userId });
         if (!account) return res.status(404).json({ message: "Account not found" });
 
-        // If we deleted the default account, make the first available account default
         if (account.isDefault) {
-            const remainingAccount = await Account.findOne({ userId });
-            if (remainingAccount) {
-                remainingAccount.isDefault = true;
-                await remainingAccount.save();
-            }
+            return res.status(400).json({ message: "Cannot delete default account" });
         }
 
-        res.json({ message: "Account deleted successfully" });
+        // Find default account to move transactions to
+        const defaultAccount = await Account.findOne({ userId, isDefault: true });
+
+        if (defaultAccount) {
+            // Move all transactions to default account
+            await Transaction.updateMany(
+                { accountId, userId },
+                { accountId: defaultAccount._id }
+            );
+        }
+
+        await Account.findByIdAndDelete(accountId);
+
+        res.json({ message: "Account deleted and transactions moved to default" });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+exports.markReportSent = async (req, res) => {
+    try {
+        const account = await Account.findOneAndUpdate(
+            { _id: req.params.id, userId: req.user._id },
+            { lastReportSentAt: new Date() },
+            { new: true }
+        );
+        if (!account) return res.status(404).json({ message: "Account not found" });
+        res.json(account);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

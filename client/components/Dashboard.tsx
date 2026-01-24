@@ -24,6 +24,7 @@ import { InitialSetup } from "./InitialSetup"
 import { AddTransaction } from "./AddTransaction"
 import { EditTransactionModal } from "./EditTransactionModal"
 import { EditCategoryModal } from "./EditCategoryModal"
+import { ShareReportModal } from "./ShareReportModal"
 import * as Icons from "lucide-react"
 import { DashboardSkeleton } from "./SkeletonLoader"
 import { useToast } from "@/hooks/use-toast"
@@ -76,6 +77,7 @@ export function Dashboard() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<any | null>(null)
   const [isEditCategoryModalOpen, setIsEditCategoryModalOpen] = useState(false)
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
   const [accounts, setAccounts] = useState<any[]>([])
 
@@ -110,7 +112,7 @@ export function Dashboard() {
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to load dashboard data",
+        description: "Failed to load categories",
         variant: "destructive",
       })
     } finally {
@@ -134,17 +136,7 @@ export function Dashboard() {
   }
 
   const handleShareReport = () => {
-    const currentStats = getFilteredStats()
-    const period = filter === "week" ? "this week" : filter === "month" ? "this month" : `last ${filter.replace('months', ' months')}`
-
-    const text = `📊 *Expense Report (${period})*\n\n` +
-      `💰 *Income:* ${(currentStats.income || 0).toFixed(2)} Rs\n` +
-      `💸 *Expenses:* ${(currentStats.expenses || 0).toFixed(2)} Rs\n` +
-      `⚖️ *Balance:* ${(currentStats.balance || 0).toFixed(2)} Rs\n\n` +
-      `_Generated via Expense Tracker App_`
-
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`
-    window.open(whatsappUrl, '_blank')
+    setIsShareModalOpen(true)
   }
 
   const handleDownloadPDF = async () => {
@@ -492,7 +484,7 @@ export function Dashboard() {
           </Card>
         </div>
 
-        {/* Category Breakdown */}
+        {/* Group Breakdown */}
         <div className="space-y-4">
           <div className="flex items-center justify-between px-2">
             <h3 className="text-xl font-black tracking-tight">Top {viewType === 'expense' ? 'Spending' : 'Sources'}</h3>
@@ -629,6 +621,11 @@ export function Dashboard() {
         }}
         category={editingCategory}
         onSuccess={loadDashboardData}
+      />
+
+      <ShareReportModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
       />
     </div>
   )

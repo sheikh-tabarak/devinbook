@@ -215,7 +215,7 @@ export function AddCategoryModal({ isOpen, onClose, onSuccess, initialType = "ex
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Category Name</Label>
+            <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Group Name</Label>
             <Input
               id="name"
               type="text"
@@ -252,7 +252,7 @@ export function AddCategoryModal({ isOpen, onClose, onSuccess, initialType = "ex
               Cancel
             </Button>
             <Button type="submit" className="flex-1 h-14 rounded-2xl font-black bg-[#5a4cf1] hover:bg-[#4a3ce1] text-white shadow-xl shadow-indigo-500/20" disabled={loading}>
-              {loading ? "Creating..." : "Add Category"}
+              {loading ? "Creating..." : "Add Group"}
             </Button>
           </div>
         </form>

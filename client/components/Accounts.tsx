@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import { api } from "@/lib/api"
 import { Button } from "@/components/ui/button"
-import { Plus, Edit, Trash2, Wallet, Landmark, User, CreditCard, Download, ArrowLeft, History } from "lucide-react"
+import { Plus, Edit, Trash2, Wallet, Landmark, User, CreditCard, Download, ArrowLeft, History, ChevronRight } from "lucide-react"
+import { SwipeableTransactionItem } from "./SwipeableTransactionItem"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
@@ -143,28 +144,28 @@ export function Accounts() {
                 </Button>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 border rounded-[32px] overflow-hidden shadow-sm">
+            <div className="space-y-3">
                 {accounts.length === 0 ? (
-                    <div className="p-12 text-center text-muted-foreground">
+                    <div className="bg-white dark:bg-slate-900 border rounded-[32px] p-12 text-center text-muted-foreground shadow-sm">
                         <Wallet className="h-8 w-8 mx-auto opacity-20 mb-2" />
                         <p className="text-xs font-bold">No accounts found</p>
                     </div>
                 ) : (
-                    accounts.map((account, idx) => (
-                        <AccountItem
+                    accounts.map((account) => (
+                        <SwipeableTransactionItem
                             key={account.id}
-                            account={account}
-                            isLast={idx === accounts.length - 1}
                             onDelete={() => handleDeleteAccount(account)}
-                            onEdit={(e) => {
-                                e.stopPropagation()
-                                setEditingAccount(account)
-                            }}
+                            onEdit={() => setEditingAccount(account)}
                             onClick={() => {
                                 setSelectedAccountForDetails(account)
                                 loadAccountTransactions(account.id)
                             }}
-                        />
+                            canDelete={!account.isDefault}
+                        >
+                            <AccountItem
+                                account={account}
+                            />
+                        </SwipeableTransactionItem>
                     ))
                 )}
             </div>
@@ -277,15 +278,12 @@ export function Accounts() {
     )
 }
 
-function AccountItem({ account, isLast, onDelete, onEdit, onClick }: { account: Account; isLast: boolean; onDelete: () => void; onEdit: (e: React.MouseEvent) => void; onClick: () => void }) {
+function AccountItem({ account }: { account: Account }) {
     const Icon = ACCOUNT_TYPE_ICONS[account.type] || ACCOUNT_TYPE_ICONS.other
     const colorClass = ACCOUNT_TYPE_COLORS[account.type] || ACCOUNT_TYPE_COLORS.other
 
     return (
-        <div
-            onClick={onClick}
-            className={`p-5 flex items-center justify-between group hover:bg-muted/30 transition-colors cursor-pointer ${!isLast ? 'border-b' : ''}`}
-        >
+        <div className="p-5 flex items-center justify-between group transition-colors">
             <div className="flex items-center gap-4">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform ${colorClass}`}>
                     <Icon className="h-6 w-6" />
@@ -318,14 +316,7 @@ function AccountItem({ account, isLast, onDelete, onEdit, onClick }: { account: 
                     </div>
                 </div>
             </div>
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button variant="ghost" size="icon" onClick={onEdit} className="rounded-xl h-10 w-10">
-                    <Edit className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={onDelete} className="text-destructive hover:bg-destructive/10 rounded-xl h-10 w-10">
-                    <Trash2 className="h-4 w-4" />
-                </Button>
-            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground/20" />
         </div>
     )
 }

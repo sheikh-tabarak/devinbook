@@ -4,9 +4,11 @@ import { useState, useEffect } from "react"
 import { api } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Plus, Edit, Trash2, Tag, ChevronRight } from "lucide-react"
+import { SwipeableTransactionItem } from "./SwipeableTransactionItem"
 import { AddCategoryModal } from "./AddCategoryModal"
 import { EditCategoryModal } from "./EditCategoryModal"
 import { useToast } from "@/hooks/use-toast"
+import { Badge } from "@/components/ui/badge"
 import * as Icons from "lucide-react"
 
 interface Category {
@@ -15,6 +17,7 @@ interface Category {
   type: "income" | "expense"
   icon?: string
   createdAt: string
+  isDefault?: boolean
 }
 
 export function Categories() {
@@ -80,9 +83,9 @@ export function Categories() {
   return (
     <div className="space-y-12 pb-20">
       <div className="flex items-center justify-between px-2">
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Budget Groups</p>
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">CATEGORIES</p>
         <Button onClick={() => setIsAddModalOpen(true)} size="sm" className="rounded-xl font-bold bg-primary/10 text-primary hover:bg-primary/20">
-          <Plus className="h-4 w-4 mr-1" /> Add Group
+          <Plus className="h-4 w-4 mr-1" /> Add Category
         </Button>
       </div>
 
@@ -92,22 +95,26 @@ export function Categories() {
           <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
           Spending
         </h3>
-        <div className="bg-white dark:bg-slate-900 border rounded-[32px] overflow-hidden shadow-sm">
+        <div className="space-y-3">
           {expenseCategories.length === 0 ? (
-            <div className="p-12 text-center text-muted-foreground">
+            <div className="bg-white dark:bg-slate-900 border rounded-[32px] p-12 text-center text-muted-foreground shadow-sm">
               <Tag className="h-8 w-8 mx-auto opacity-20 mb-2" />
               <p className="text-xs font-bold">No spending categories</p>
             </div>
           ) : (
-            expenseCategories.map((category, idx) => (
-              <CategoryItem
+            expenseCategories.map((category) => (
+              <SwipeableTransactionItem
                 key={category.id}
-                category={category}
-                isLast={idx === expenseCategories.length - 1}
                 onEdit={() => { setEditingCategory(category); setIsEditModalOpen(true); }}
                 onDelete={() => handleDeleteCategory(category)}
-                renderIcon={renderIcon}
-              />
+                onClick={() => { setEditingCategory(category); setIsEditModalOpen(true); }}
+                canDelete={!category.isDefault}
+              >
+                <CategoryItem
+                  category={category}
+                  renderIcon={renderIcon}
+                />
+              </SwipeableTransactionItem>
             ))
           )}
         </div>
@@ -119,22 +126,26 @@ export function Categories() {
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           Income
         </h3>
-        <div className="bg-white dark:bg-slate-900 border rounded-[32px] overflow-hidden shadow-sm">
+        <div className="space-y-3">
           {incomeCategories.length === 0 ? (
-            <div className="p-12 text-center text-muted-foreground">
+            <div className="bg-white dark:bg-slate-900 border rounded-[32px] p-12 text-center text-muted-foreground shadow-sm">
               <Plus className="h-8 w-8 mx-auto opacity-20 mb-2" />
               <p className="text-xs font-bold">No income categories</p>
             </div>
           ) : (
-            incomeCategories.map((category, idx) => (
-              <CategoryItem
+            incomeCategories.map((category) => (
+              <SwipeableTransactionItem
                 key={category.id}
-                category={category}
-                isLast={idx === incomeCategories.length - 1}
                 onEdit={() => { setEditingCategory(category); setIsEditModalOpen(true); }}
                 onDelete={() => handleDeleteCategory(category)}
-                renderIcon={renderIcon}
-              />
+                onClick={() => { setEditingCategory(category); setIsEditModalOpen(true); }}
+                canDelete={!category.isDefault}
+              >
+                <CategoryItem
+                  category={category}
+                  renderIcon={renderIcon}
+                />
+              </SwipeableTransactionItem>
             ))
           )}
         </div>
@@ -159,28 +170,26 @@ export function Categories() {
   )
 }
 
-function CategoryItem({ category, isLast, onEdit, onDelete, renderIcon }: any) {
+function CategoryItem({ category, renderIcon }: any) {
   return (
-    <div
-      className={`p-5 flex items-center justify-between group hover:bg-muted/30 transition-colors ${!isLast ? 'border-b' : ''}`}
-    >
+    <div className="p-5 flex items-center justify-between group transition-colors">
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
           {renderIcon(category.icon)}
         </div>
         <div>
-          <p className="font-black text-sm">{category.name}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-black text-sm">{category.name}</p>
+            {category.isDefault && (
+              <Badge variant="secondary" className="text-[8px] uppercase font-black px-1.5 py-0 rounded-md bg-primary/10 text-primary border-none">
+                Default
+              </Badge>
+            )}
+          </div>
           <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{category.type}</p>
         </div>
       </div>
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button variant="ghost" size="icon" onClick={onEdit} className="rounded-xl h-10 w-10">
-          <Edit className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={onDelete} className="text-destructive hover:bg-destructive/10 rounded-xl h-10 w-10">
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
+      <ChevronRight className="h-4 w-4 text-muted-foreground/20" />
     </div>
   )
 }

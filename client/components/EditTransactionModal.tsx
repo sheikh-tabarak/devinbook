@@ -215,10 +215,10 @@ export function EditTransactionModal({ transaction, isOpen, onClose, onSuccess }
 
           {/* Category */}
           <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Category</Label>
+            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Group</Label>
             <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId} required>
               <SelectTrigger className="h-14 rounded-2xl bg-muted/50 border-none font-bold">
-                <SelectValue placeholder="Select a category" />
+                <SelectValue placeholder="Select a group" />
               </SelectTrigger>
               <SelectContent className="rounded-2xl border-none shadow-2xl">
                 {categories.filter(c => c.type === type).map((category) => (

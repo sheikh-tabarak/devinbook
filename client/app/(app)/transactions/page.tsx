@@ -151,7 +151,7 @@ export default function TransactionsPage() {
                         <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-6 px-6">
                             <button
                                 onClick={() => setSelectedAccountId("all")}
-                                className={`flex-shrink-0 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedAccountId === "all" ? "bg-primary text-white shadow-lg" : "bg-muted text-muted-foreground"}`}
+                                className={`flex-shrink-0 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedAccountId === "all" ? "bg-primary text-primary-foreground shadow-lg" : "bg-muted text-muted-foreground"}`}
                             >
                                 All Accounts
                             </button>
@@ -159,7 +159,7 @@ export default function TransactionsPage() {
                                 <button
                                     key={acc.id}
                                     onClick={() => setSelectedAccountId(acc.id)}
-                                    className={`flex-shrink-0 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedAccountId === acc.id ? "bg-primary text-white shadow-lg" : "bg-muted text-muted-foreground"}`}
+                                    className={`flex-shrink-0 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedAccountId === acc.id ? "bg-primary text-primary-foreground shadow-lg" : "bg-muted text-muted-foreground"}`}
                                 >
                                     {acc.name}
                                 </button>

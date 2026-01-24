@@ -160,7 +160,7 @@ export function EditCategoryModal({ category, isOpen, onClose, onSuccess }: Edit
     if (!category || !name.trim()) {
       toast({
         title: "Error",
-        description: "Please enter a category name",
+        description: "Please enter a group name",
         variant: "destructive",
       })
       return
@@ -290,7 +290,7 @@ export function EditCategoryModal({ category, isOpen, onClose, onSuccess }: Edit
               {loading ? "Saving..." : "Save Changes"}
             </Button>
             <Button type="button" variant="ghost" onClick={handleDelete} className="w-full h-14 rounded-2xl font-bold text-destructive hover:bg-destructive/10" disabled={loading}>
-              Delete Group
+              Delete Category
             </Button>
           </div>
         </form>

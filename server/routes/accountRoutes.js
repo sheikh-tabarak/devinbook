@@ -9,5 +9,6 @@ router.post("/", accountController.createAccount);
 router.get("/", accountController.getAccounts);
 router.put("/:id", accountController.updateAccount);
 router.delete("/:id", accountController.deleteAccount);
+router.post("/:id/mark-report-sent", accountController.markReportSent);
 
 module.exports = router;

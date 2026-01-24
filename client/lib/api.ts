@@ -9,6 +9,12 @@ class ApiClient {
     }
   }
 
+  private onUnauthorized: (() => void) | null = null
+
+  setUnauthorizedHandler(handler: () => void) {
+    this.onUnauthorized = handler
+  }
+
   async request(endpoint: string, options: RequestInit = {}) {
     const url = `${this.baseURL}${endpoint}`
 
@@ -20,6 +26,13 @@ class ApiClient {
           ...options.headers,
         },
       })
+
+      if (response.status === 401) {
+        if (this.onUnauthorized) {
+          this.onUnauthorized()
+        }
+        throw new Error("Session expired. Please login again.")
+      }
 
       let data: any = null
       const contentType = response.headers.get("content-type")
@@ -46,6 +59,10 @@ class ApiClient {
   }
 
   // Auth endpoints
+  async getMe() {
+    return this.request("/auth/me")
+  }
+
   async login(email: string, password: string) {
     return this.request("/auth/login", {
       method: "POST",
@@ -191,6 +208,12 @@ class ApiClient {
   async deleteAccount(id: string) {
     return this.request(`/accounts/${id}`, {
       method: "DELETE",
+    })
+  }
+
+  async markReportSent(id: string) {
+    return this.request(`/accounts/${id}/mark-report-sent`, {
+      method: "POST",
     })
   }
 

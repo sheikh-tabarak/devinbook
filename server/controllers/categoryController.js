@@ -13,7 +13,34 @@ exports.createCategory = async (req, res) => {
 
 exports.getCategories = async (req, res) => {
   try {
-    const categories = await Category.find({ userId: req.user?._id });
+    let categories = await Category.find({ userId: req.user._id });
+
+    // Ensure default categories exist for this user
+    const hasDefaultExpense = categories.some(c => c.type === "expense" && c.isDefault);
+    const hasDefaultIncome = categories.some(c => c.type === "income" && c.isDefault);
+
+    if (!hasDefaultExpense) {
+      const defExp = await Category.create({
+        userId: req.user._id,
+        name: "Other Expenses",
+        type: "expense",
+        icon: "Tag",
+        isDefault: true
+      });
+      categories.push(defExp);
+    }
+
+    if (!hasDefaultIncome) {
+      const defInc = await Category.create({
+        userId: req.user._id,
+        name: "Other Income",
+        type: "income",
+        icon: "TrendingUp",
+        isDefault: true
+      });
+      categories.push(defInc);
+    }
+
     const formattedCategories = categories.map(cat => ({
       ...cat.toObject(),
       id: cat._id
@@ -43,18 +70,31 @@ exports.deleteCategory = async (req, res) => {
     const categoryId = req.params.id;
     const userId = req.user._id;
 
-    // Check if category has transactions
-    const transactionCount = await Transaction.countDocuments({ categoryId, userId });
-    if (transactionCount > 0) {
-      return res.status(400).json({
-        message: `Cannot delete category. It is used in ${transactionCount} transactions.`
-      });
-    }
-
-    const category = await Category.findOneAndDelete({ _id: categoryId, userId });
+    const category = await Category.findOne({ _id: categoryId, userId });
     if (!category) return res.status(404).json({ message: "Category not found" });
 
-    res.json({ message: "Category deleted successfully" });
+    if (category.isDefault) {
+      return res.status(400).json({ message: "Cannot delete default category" });
+    }
+
+    // Find default category of same type to move transactions to
+    const defaultCategory = await Category.findOne({
+      userId,
+      type: category.type,
+      isDefault: true
+    });
+
+    if (defaultCategory) {
+      // Move all transactions to default category
+      await Transaction.updateMany(
+        { categoryId, userId },
+        { categoryId: defaultCategory._id }
+      );
+    }
+
+    await Category.findByIdAndDelete(categoryId);
+
+    res.json({ message: "Category deleted and transactions moved to default" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
